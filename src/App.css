@@ -1,0 +1,14 @@
+nav {
+    margin-bottom: 20px;
+  }
+  
+  nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: blue;
+  }
+  
+  h2 {
+    color: #333;
+  }
+  
