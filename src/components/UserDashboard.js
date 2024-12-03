@@ -36,3 +36,41 @@ function UserDashboard() {
         setError('Failed to place order.');
       });
   };
+return (
+    <div>
+      <h2>User Dashboard</h2>
+      <p>Welcome, User! You can view your orders and place new orders here.</p>
+
+      {/* Orders Section */}
+      <div>
+        <h3>Your Orders</h3>
+        {orders.length > 0 ? (
+          <ul>
+            {orders.map((order) => (
+              <li key={order.id}>
+                Order ID: {order.id}, Medicine: {order.medicine.name} - {order.medicine.price} USD
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>You have no orders yet.</p>
+        )}
+      </div>
+
+      {/* Medicines Section */}
+      <div>
+        <h3>Available Medicines</h3>
+        <ul>
+          {medicines.map((medicine) => (
+            <li key={medicine.id}>
+              <strong>{medicine.name}</strong> - {medicine.price} USD
+              <button onClick={() => handlePlaceOrder(medicine.id)}>Order</button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export default UserDashboard;
