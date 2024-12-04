@@ -25,3 +25,10 @@ def update_product(id):
     product.stock = data.get('stock', product.stock)
     db.session.commit()
     return jsonify({'message': 'Product updated successfully'})
+    
+@pharmacy_bp.route('/products/<int:id>', methods=['DELETE'])
+def delete_product(id):
+    product = Product.query.get_or_404(id)
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify({'message': 'Product deleted successfully'})
