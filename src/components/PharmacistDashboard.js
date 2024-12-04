@@ -9,7 +9,6 @@ function PharmacistDashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch medicines from the server
     axios.get('http://localhost:5000/medicines')
       .then((response) => {
         setMedicines(response.data.medicines);
@@ -24,15 +23,12 @@ function PharmacistDashboard() {
       setError('Please provide all fields.');
       return;
     }
-
-    // Send request to add new medicine
     axios.post('http://localhost:5000/medicines', {
       name: medicineName,
       price: medicinePrice,
       description: medicineDescription,
     })
       .then((response) => {
-        // Update the medicines list after adding new medicine
         setMedicines([...medicines, response.data.medicine]);
         setMedicineName('');
         setMedicinePrice('');
@@ -43,3 +39,54 @@ function PharmacistDashboard() {
         setError('Failed to add medicine.');
       });
   };
+  return (
+    <div>
+      <h2>Pharmacist Dashboard</h2>
+      <p>Welcome, Pharmacist! You can manage medicines and prescriptions here.</p>
+
+      {/* Add Medicine Section */}
+      <div>
+        <h3>Add New Medicine</h3>
+        <div>
+          <label>Medicine Name:</label>
+          <input
+            type="text"
+            value={medicineName}
+            onChange={(e) => setMedicineName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Medicine Price:</label>
+          <input
+            type="number"
+            value={medicinePrice}
+            onChange={(e) => setMedicinePrice(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Medicine Description:</label>
+          <textarea
+            value={medicineDescription}
+            onChange={(e) => setMedicineDescription(e.target.value)}
+          />
+        </div>
+        <button onClick={handleAddMedicine}>Add Medicine</button>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+      </div>
+
+      {/* Medicines List Section */}
+      <h3>Medicines List</h3>
+      <ul>
+        {medicines.map((medicine) => (
+          <li key={medicine.id}>
+            <strong>{medicine.name}</strong> - {medicine.price} USD
+            <p>{medicine.description}</p>
+            {/* Add buttons for edit/delete */}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default PharmacistDashboard;
