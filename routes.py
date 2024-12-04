@@ -15,3 +15,13 @@ def add_product():
     db.session.add(new_product)
     db.session.commit()
     return jsonify({'message': 'Product added successfully'}), 201
+    
+@pharmacy_bp.route('/products/<int:id>', methods=['PUT'])
+def update_product(id):
+    data = request.json
+    product = Product.query.get_or_404(id)
+    product.name = data.get('name', product.name)
+    product.price = data.get('price', product.price)
+    product.stock = data.get('stock', product.stock)
+    db.session.commit()
+    return jsonify({'message': 'Product updated successfully'})
