@@ -65,3 +65,77 @@ function AddStore() {
         });
     }
   };
+  return (
+    <div>
+      <h2>{isUpdating ? 'Update Store' : 'Add Store'}</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="name">Store Name:</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={store.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="address">Store Address:</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            value={store.address}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phoneNumber">Phone Number:</label>
+          <input
+            type="text"
+            id="phoneNumber"
+            name="phoneNumber"
+            value={store.phoneNumber}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="openHours">Opening Hours:</label>
+          <input
+            type="text"
+            id="openHours"
+            name="openHours"
+            value={store.openHours}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="isActive">Store Status:</label>
+          <select
+            id="isActive"
+            name="isActive"
+            value={store.isActive}
+            onChange={handleChange}
+            required
+          >
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+
+        <button type="submit">{isUpdating ? 'Update' : 'Add'} Store</button>
+      </form>
+    </div>
+  );
+}
+
+export default AddStore;
+
