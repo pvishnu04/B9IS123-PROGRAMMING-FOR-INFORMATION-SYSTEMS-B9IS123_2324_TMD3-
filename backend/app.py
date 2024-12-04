@@ -30,10 +30,17 @@ def register():
 
         if not username or not password or not role or not email:
             return jsonify({"error": "Missing required fields"}), 400
-        username = data.get('username')
-        password = data.get('password')
-        role = data.get('role')
-        email = data.get('email')
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-        if not username or not password or not role or not email:
-            return jsonify({"error": "Missing required fields"}), 400
+        # Insert query
+        query = """
+            INSERT INTO users (username, password, role, email)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (username, password, role, email))
+        conn.commit()
+
+        # Close the connection
+        cursor.close()
+        conn.close()
