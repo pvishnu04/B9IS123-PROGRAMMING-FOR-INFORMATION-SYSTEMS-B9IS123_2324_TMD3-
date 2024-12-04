@@ -32,8 +32,6 @@ def register():
             return jsonify({"error": "Missing required fields"}), 400
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Insert query
         query = """
             INSERT INTO users (username, password, role, email)
             VALUES (%s, %s, %s, %s)
@@ -41,6 +39,15 @@ def register():
         cursor.execute(query, (username, password, role, email))
         conn.commit()
 
-        # Close the connection
         cursor.close()
         conn.close()
+        return jsonify({"message": "User registered successfully"}), 201
+
+    except pg8000.DatabaseError as e:
+        app.logger.error(f"Database error: {e}")
+        return jsonify({"error": "Database error, please try again later"}), 500
+    except Exception as e:
+
+        app.logger.error(f"Unexpected error: {e}")
+        app.logger.error(traceback.format_exc())  
+        return jsonify({"error": "An unexpected error occurred"}), 500
