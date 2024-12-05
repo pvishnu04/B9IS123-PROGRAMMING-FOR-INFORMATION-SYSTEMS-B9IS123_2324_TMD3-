@@ -51,3 +51,25 @@ def register():
         app.logger.error(f"Unexpected error: {e}")
         app.logger.error(traceback.format_exc())  
         return jsonify({"error": "An unexpected error occurred"}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return jsonify({"error": "Missing required fields"}), 400
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = "SELECT * FROM users WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
+        user = cursor.fetchone()
+
+        cursor.close()
+        conn.close()
