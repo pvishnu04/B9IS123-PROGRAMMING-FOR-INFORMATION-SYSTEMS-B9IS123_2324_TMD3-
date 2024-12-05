@@ -92,3 +92,34 @@ def login():
         app.logger.error(f"Unexpected error: {e}")
         app.logger.error(traceback.format_exc())  # Print full stack trace for debugging
         return jsonify({"error": "An unexpected error occurred"}), 500
+@app.route('/admin/medicines', methods=['POST'])
+def add_medicine():
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            description = data.get('description')
+            price = data.get('price')
+            availability = data.get('availability')
+
+            if not name or not price or not availability:
+                return jsonify({"error": "Missing required fields"}), 400
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            query = """
+                INSERT INTO medicines (name, description, price, availability)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (name, description, price, availability))
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "Medicine added successfully"}), 201
+        except Exception as e:
+            app.logger.error(f"Error adding medicine: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
