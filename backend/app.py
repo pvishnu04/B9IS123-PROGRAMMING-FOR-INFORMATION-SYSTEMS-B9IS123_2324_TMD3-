@@ -73,3 +73,22 @@ def login():
 
         cursor.close()
         conn.close()
+        if user:
+            session['username'] = user[1]  # Store username in session
+            session['role'] = user[3]      # Store role in session
+
+            if user[3] == 'admin':
+                return jsonify({"message": "Login successful. Redirecting to Admin Dashboard."}), 200
+            elif user[3] == 'pharmacist':
+                return jsonify({"message": "Login successful. Redirecting to Pharmacist Dashboard."}), 200
+            elif user[3] == 'user':
+                return jsonify({"message": "Login successful. Redirecting to User Dashboard."}), 200
+        else:
+            return jsonify({"error": "Invalid username or password"}), 401
+    except pg8000.DatabaseError as e:
+        app.logger.error(f"Database error: {e}")
+        return jsonify({"error": "Database error, please try again later"}), 500
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {e}")
+        app.logger.error(traceback.format_exc())  # Print full stack trace for debugging
+        return jsonify({"error": "An unexpected error occurred"}), 500
