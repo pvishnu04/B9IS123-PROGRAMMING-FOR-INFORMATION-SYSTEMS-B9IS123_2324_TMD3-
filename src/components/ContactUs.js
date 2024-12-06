@@ -1,17 +1,13 @@
 import React from 'react';
+import Home from "./Home";
 
-function ContactUs() {
+const ContactUs = () => {
   return (
     <div>
       <h2>Contact Us</h2>
-      <p>Email: support@onlinepharmacy.com</p>
-      <p>Phone: +1-800-123-4567</p>
-      <form>
-        <textarea placeholder="Your message" />
-        <button type="submit">Send</button>
-      </form>
+      <p>Email: contact@medicinestore.com </p>
+      <p>Phone: +1234567890 </p>
     </div>
   );
-}
-
+};
 export default ContactUs;
