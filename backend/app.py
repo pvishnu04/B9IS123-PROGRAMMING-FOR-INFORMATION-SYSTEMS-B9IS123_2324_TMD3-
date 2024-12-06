@@ -172,3 +172,23 @@ def update_medicine(id):
             app.logger.error(traceback.format_exc())
             return jsonify({"error": "An unexpected error occurred"}), 500
     return jsonify({"error": "Access denied"}), 403
+    
+@app.route('/admin/medicines/<int:id>', methods=['DELETE'])
+def delete_medicine(id):
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = "DELETE FROM medicines WHERE id = %s"
+            cursor.execute(query, (id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            return jsonify({"message": "Medicine deleted successfully"}), 200
+        except Exception as e:
+            app.logger.error(f"Error deleting medicine: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
+    
