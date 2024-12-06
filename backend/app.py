@@ -213,3 +213,31 @@ def view_orders():
             return jsonify({"error": "An unexpected error occurred"}), 500
     return jsonify({"error": "Access denied"}), 403
 
+@app.route('/admin/orders/<int:id>', methods=['PUT'])
+def update_order(id):
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            data = request.get_json()
+            status = data.get('status')
+
+            if not status:
+                return jsonify({"error": "Missing required fields"}), 400
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            query = """
+                UPDATE orders SET status = %s WHERE id = %s
+            """
+            cursor.execute(query, (status, id))
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return jsonify({"message": "Order updated successfully"}), 200
+        except Exception as e:
+            app.logger.error(f"Error updating order: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
