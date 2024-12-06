@@ -123,3 +123,20 @@ def add_medicine():
             app.logger.error(traceback.format_exc())
             return jsonify({"error": "An unexpected error occurred"}), 500
     return jsonify({"error": "Access denied"}), 403
+@app.route('/admin/medicines', methods=['GET'])
+def view_medicines():
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = "SELECT * FROM medicines"
+            cursor.execute(query)
+            medicines = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return jsonify({"medicines": medicines}), 200
+        except Exception as e:
+            app.logger.error(f"Error viewing medicines: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
