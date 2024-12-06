@@ -140,3 +140,35 @@ def view_medicines():
             app.logger.error(traceback.format_exc())
             return jsonify({"error": "An unexpected error occurred"}), 500
     return jsonify({"error": "Access denied"}), 403
+    
+@app.route('/admin/medicines/<int:id>', methods=['PUT'])
+def update_medicine(id):
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            description = data.get('description')
+            price = data.get('price')
+            availability = data.get('availability')
+
+            if not name or not price or not availability:
+                return jsonify({"error": "Missing required fields"}), 400
+
+            conn = get_db_connection()
+            cursor = conn.cursor()
+             query = """
+                UPDATE medicines SET name = %s, description = %s, price = %s, availability = %s
+                WHERE id = %s
+            """
+            cursor.execute(query, (name, description, price, availability, id))
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return jsonify({"message": "Medicine updated successfully"}), 200
+        except Exception as e:
+            app.logger.error(f"Error updating medicine: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
