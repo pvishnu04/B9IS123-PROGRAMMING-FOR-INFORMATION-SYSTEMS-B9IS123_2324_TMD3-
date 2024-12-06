@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
-
+import Home from "./Home";
 const Login = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
-
+    const [credentials, setCredentials] = useState({ username: "", password: "" });
+    const navigate = useNavigate();
+    
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-    };
-const handleSubmit = async (e) => {
+        setCredentials({ ...credentials, [e.target.name]: e.target.value });
+      };
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.post('http://localhost:3001/api/users/login', formData);
-            if (response.data.success) {
-                alert('Login successful!');
-                console.log(response.data.user);
+    try {
+        const response = await axios.post('http://127.0.0.1:5000/login', credentials');
+        if (response.status === 200) {
+            if (credentials.username === "admin") {
+              navigate("/admin");
             } else {
-                alert('Invalid credentials. Please try again.');
+                navigate("/userdashboard");
             }
         } catch (err) {
-            console.error(err);
-            alert('Login failed. Please try again.');
+            console.error("Error during login:", error);
+            alert('Invalid credentials or login failed..');
         }
     };
     return (
