@@ -241,3 +241,27 @@ def update_order(id):
             app.logger.error(traceback.format_exc())
             return jsonify({"error": "An unexpected error occurred"}), 500
     return jsonify({"error": "Access denied"}), 403
+
+@app.route('/admin/orders/<int:id>', methods=['DELETE'])
+def delete_order(id):
+    if 'username' in session and session['role'] == 'admin':
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            query = "DELETE FROM orders WHERE id = %s"
+            cursor.execute(query, (id,))
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return jsonify({"message": "Order deleted successfully"}), 200
+        except Exception as e:
+            app.logger.error(f"Error deleting order: {e}")
+            app.logger.error(traceback.format_exc())
+            return jsonify({"error": "An unexpected error occurred"}), 500
+    return jsonify({"error": "Access denied"}), 403
+
+if __name__ == '__main__':
+    app.run(debug=True)
