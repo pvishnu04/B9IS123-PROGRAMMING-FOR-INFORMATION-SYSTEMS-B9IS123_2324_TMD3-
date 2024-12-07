@@ -100,3 +100,50 @@ return (
       <button onClick={() => setShowAddForm(!showAddForm)} style={{ marginBottom: '20px' }}>
         {showAddForm ? 'Cancel Add' : 'Add Medicine'}
       </button>
+      {showAddForm && (
+        <form onSubmit={handleAddMedicine} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto' }}>
+          <input type="text" name="name" placeholder="Name" value={newMedicine.name} onChange={handleChange} required />
+          <textarea name="description" placeholder="Description" value={newMedicine.description} onChange={handleChange} />
+          <input type="number" name="price" placeholder="Price" value={newMedicine.price} onChange={handleChange} required />
+          <input type="number" name="stock_quantity" placeholder="Stock Quantity" value={newMedicine.stock_quantity} onChange={handleChange} required />
+          <button type="submit">Add Medicine</button>
+        </form>
+      )}
+
+      <h3>Available Medicines</h3>
+      <table border="1" cellPadding="10" style={{ marginTop: '20px' }}>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Stock Quantity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredAndSortedMedicines.length > 0 ? (
+            filteredAndSortedMedicines.map((medicine) => (
+              <tr key={medicine.id}>
+                <td>{medicine.name}</td>
+                <td>{medicine.description}</td>
+                <td>{medicine.price}</td>
+                <td>{medicine.stock_quantity}</td>
+                <td>
+                  <button onClick={() => setEditMedicine(medicine)}>Edit</button>
+                  <button onClick={() => handleDeleteMedicine(medicine.id)}>Delete</button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5">No medicines found.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default ManageMedicines;
