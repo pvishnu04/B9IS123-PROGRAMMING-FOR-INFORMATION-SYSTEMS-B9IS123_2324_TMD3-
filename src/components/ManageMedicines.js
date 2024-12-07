@@ -75,3 +75,28 @@ const handleChange = (e) => {
       if (sortOption === 'name-desc') return b.name.localeCompare(a.name);
       return 0;
     });
+return (
+    <div style={{ padding: '20px' }}>
+      <AdminDashboard />
+      <h2>Manage Medicines</h2>
+
+      <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search by name"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{ marginRight: '10px' }}
+        />
+        <select value={sortOption} onChange={handleSortChange}>
+          <option value="">Sort By</option>
+          <option value="name-asc">Name (A-Z)</option>
+          <option value="name-desc">Name (Z-A)</option>
+          <option value="price-asc">Price (Low to High)</option>
+          <option value="price-desc">Price (High to Low)</option>
+        </select>
+      </div>
+
+      <button onClick={() => setShowAddForm(!showAddForm)} style={{ marginBottom: '20px' }}>
+        {showAddForm ? 'Cancel Add' : 'Add Medicine'}
+      </button>
