@@ -49,21 +49,39 @@ const ViewOrders = () => {
       alert("Error updating order.");
     }
   };
+
+  const handleDeleteOrder = async (id) => {
+    try {
+      console.log(`Deleting order ${id}`);
+      const response = await axios.delete(`http://localhost:5000/admin/orders/${id}`);
+      console.log("Response from delete:", response.data);
+  
+      if (response.data.message === 'Order deleted successfully') {
+        setOrders(orders.filter((order) => order.id !== id));  // Remove the order from the state
+        alert("Order deleted successfully");
+      } else {
+        alert("Failed to delete order");
+      }
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      alert("Error deleting order.");
+    }
+  };
   return (
     <div>
-      <h2>Pharmacist Dashboard</h2>
-      <p>Welcome, Pharmacist! You can manage medicines and prescriptions here.</p>
-
-      {/* Add Medicine Section */}
-      <div>
-        <h3>Add New Medicine</h3>
-        <div>
-          <label>Medicine Name:</label>
-          <input
-            type="text"
-            value={medicineName}
-            onChange={(e) => setMedicineName(e.target.value)}
-          />
+      <AdminDashboard/>
+      <h2>Orders</h2>
+      {error && <div className="error">{error}</div>}
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        </table>
         </div>
         <div>
           <label>Medicine Price:</label>
