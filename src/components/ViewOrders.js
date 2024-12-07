@@ -1,43 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AdminDashboard from "./AdminDashboard";
 
-function PharmacistDashboard() {
-  const [medicines, setMedicines] = useState([]);
-  const [medicineName, setMedicineName] = useState('');
-  const [medicinePrice, setMedicinePrice] = useState('');
-  const [medicineDescription, setMedicineDescription] = useState('');
-  const [error, setError] = useState('');
+const ViewOrders = () => {
+  const [orders, setOrders] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/medicines')
-      .then((response) => {
-        setMedicines(response.data.medicines);
-      })
-      .catch((error) => {
-        setError('Failed to fetch medicines.');
-      });
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/admin/orders");
+        console.log("Fetched Orders Response:", response.data);
+
+        if (response.data && response.data.orders) {
+          setOrders(response.data.orders);
+        } else {
+          setError("No orders found.");
+        }
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError("Error fetching orders.");
+      }
+    };
+    fetchOrders();
   }, []);
 
-  const handleAddMedicine = () => {
-    if (!medicineName || !medicinePrice || !medicineDescription) {
-      setError('Please provide all fields.');
-      return;
+  const handleUpdateOrder = async (id, status) => {
+    try {
+      console.log(`Updating order ${id} to ${status}`);
+      const response = await axios.put(
+        `http://localhost:5000/admin/orders/${id}`,
+        { status }
+      );
+      console.log("Response from update:", response.data);
+
+      if (response.data.message === 'Order updated successfully') {
+        setOrders(
+          orders.map((order) =>
+            order.id === id ? { ...order, status } : order
+          )
+        );
+        alert("Order updated successfully");
+      } else {
+        alert("Failed to update order");
+      }
+    } catch (err) {
+      console.error("Error updating order:", err);
+      alert("Error updating order.");
     }
-    axios.post('http://localhost:5000/medicines', {
-      name: medicineName,
-      price: medicinePrice,
-      description: medicineDescription,
-    })
-      .then((response) => {
-        setMedicines([...medicines, response.data.medicine]);
-        setMedicineName('');
-        setMedicinePrice('');
-        setMedicineDescription('');
-        setError('');
-      })
-      .catch((error) => {
-        setError('Failed to add medicine.');
-      });
   };
   return (
     <div>
