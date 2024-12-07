@@ -1,21 +1,72 @@
-from flask import Flask, jsonify, request, session
+import os
 import pg8000
 import hashlib
 import traceback
 from flask_cors import CORS
+from functools import wraps
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
+from flask import Flask, render_template,jsonify, redirect, url_for, request, session
+from datetime import datetime 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+from flask_login import current_user
+from decimal import Decimal
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+app.secret_key = 'vishnu'
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback_secret_key')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+pg8000://postgres:admin@localhost/Pharmacy'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
 CORS(app)
-DATABASE_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "user": "postgres",  
-    "password": "admin",  
-    "database": "Pharmacy"  
-}
+
 def get_db_connection():
-    return pg8000.connect(**DATABASE_CONFIG)
+    return pg8000.connect(user="postgres", password="admin", host="localhost", database="Pharmacy")
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    orders = db.relationship('Order', back_populates='user', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'password': self.password,
+            'email': self.email,
+            'created_at': self.created_at.isoformat(),
+            'orders': [order.to_dict() for order in self.orders]
+        }
+class Medicine(db.Model):
+    __tablename__ = 'medicine'  
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    stock_quantity = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    order_items = db.relationship('OrderItem', back_populates='medicine', primaryjoin='Medicine.id == OrderItem.medicine_id')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'price': str(self.price),
+            'stock_quantity': self.stock_quantity,
+            'created_at': self.created_at.isoformat()
+        }
 @app.route('/register', methods=['POST'])
 def register():
     try:
