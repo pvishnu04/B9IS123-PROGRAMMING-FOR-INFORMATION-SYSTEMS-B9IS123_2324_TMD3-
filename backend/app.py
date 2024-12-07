@@ -67,6 +67,46 @@ class Medicine(db.Model):
             'stock_quantity': self.stock_quantity,
             'created_at': self.created_at.isoformat()
         }
+class Order(db.Model):  # Renamed to match the relationship reference
+    __tablename__ = 'orders'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'completed', 'canceled'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', back_populates='orders')
+    order_items = db.relationship('OrderItem', backref='order_ref', cascade='all, delete', lazy='dynamic')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'total_amount': str(self.total_amount),
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'order_items': [item.to_dict() for item in self.order_items]
+        }
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id', ondelete='CASCADE'))
+    medicine_id = db.Column(db.Integer, db.ForeignKey('medicine.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Numeric(10, 2), nullable=False)  # Price at the time of the order
+
+    order = db.relationship('Order', back_populates='order_items')
+    medicine = db.relationship('Medicine', back_populates='order_items')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'order_id': self.order_id,
+            'quantity': self.quantity,
+            'price': str(self.price),
+            'total_price': str(self.price * self.quantity)
+        }
+        
 @app.route('/register', methods=['POST'])
 def register():
     try:
