@@ -26,18 +26,17 @@ const Login = () => {
     };
     return (
         <div>
+            <Home />
+          <form onSubmit={handleSubmit}>
             <h2>Login</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Email:</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-                </div>
-                <div>
+                <input type="text" name="username" placeholder="Username" value={credentials.username} onChange={handleChange}
+                    required/>
                     <label>Password:</label>
-                    <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-                </div>
+                <input type="password" name="password" placeholder="Password"
+                            value={credentials.password} onChange={handleChange} required />
                 <button type="submit">Login</button>
             </form>
         </div>
     );
 };
+export default Login;
