@@ -69,9 +69,26 @@ const ViewOrders = () => {
   };
   return (
     <div>
-      <AdminDashboard/>
+      <AdminDashboard />
       <h2>Orders</h2>
       {error && <div className="error">{error}</div>}
+
+      <input
+        type="text"
+        placeholder="Search by ID or Status"
+        value={searchTerm}
+        onChange={handleSearch}
+      />
+
+      <div>
+        <button onClick={() => handleSortChange("id")}>
+          Sort by ID ({sortOrder})
+        </button>
+        <button onClick={() => handleSortChange("status")}>
+          Sort by Status ({sortOrder})
+        </button>
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -81,40 +98,39 @@ const ViewOrders = () => {
           </tr>
         </thead>
         <tbody>
-        </table>
-        </div>
-        <div>
-          <label>Medicine Price:</label>
-          <input
-            type="number"
-            value={medicinePrice}
-            onChange={(e) => setMedicinePrice(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Medicine Description:</label>
-          <textarea
-            value={medicineDescription}
-            onChange={(e) => setMedicineDescription(e.target.value)}
-          />
-        </div>
-        <button onClick={handleAddMedicine}>Add Medicine</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </div>
-
-      {/* Medicines List Section */}
-      <h3>Medicines List</h3>
-      <ul>
-        {medicines.map((medicine) => (
-          <li key={medicine.id}>
-            <strong>{medicine.name}</strong> - {medicine.price} USD
-            <p>{medicine.description}</p>
-            {/* Add buttons for edit/delete */}
-          </li>
-        ))}
-      </ul>
+          {filteredOrders.length > 0 ? (
+            filteredOrders.map((order) => (
+              <tr key={order.id}>
+                <td>{order.id}</td>
+                <td>{order.status}</td>
+                <td>
+                  <button
+                    onClick={() =>
+                      handleUpdateOrder(
+                        order.id,
+                        order.status === "pending" ? "completed" : "pending"
+                      )
+                    }
+                  >
+                    {order.status === "pending"
+                      ? "Mark as Completed"
+                      : "Mark as Pending"}
+                  </button>
+                  <button onClick={() => handleDeleteOrder(order.id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3">No orders available</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
 
-export default PharmacistDashboard;
+export default ViewOrders;
