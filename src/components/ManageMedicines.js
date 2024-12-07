@@ -33,3 +33,45 @@ const handleChange = (e) => {
       return;
     }  
 
+    try {
+      const medicineData = {
+        name: newMedicine.name,
+        description: newMedicine.description,
+        price: parseFloat(newMedicine.price),
+        stock_quantity: parseInt(newMedicine.stock_quantity),
+      };
+
+      const response = await axios.post('http://localhost:5000/admin/medicines', medicineData);
+      if (response.status === 201) {
+        alert('Medicine added successfully!');
+        fetchMedicines();
+        setNewMedicine({ name: '', description: '', price: '', stock_quantity: '' });
+        setShowAddForm(false); // Hide the form after adding
+      }
+    } catch (error) {
+      console.error('Error adding medicine:', error);
+    }
+  };
+  const handleDeleteMedicine = async (id) => {
+    if (window.confirm('Are you sure you want to delete this medicine?')) {
+      try {
+        await axios.delete(`http://localhost:5000/admin/medicines/${id}`);
+        alert('Medicine deleted successfully!');
+        fetchMedicines();
+      } catch (error) {
+        console.error('Error deleting medicine:', error);
+      }
+    }
+  };
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+  const handleSortChange = (e) => setSortOption(e.target.value);
+
+  const filteredAndSortedMedicines = medicines
+    .filter((medicine) => medicine.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      if (sortOption === 'price-asc') return a.price - b.price;
+      if (sortOption === 'price-desc') return b.price - a.price;
+      if (sortOption === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortOption === 'name-desc') return b.name.localeCompare(a.name);
+      return 0;
+    });
