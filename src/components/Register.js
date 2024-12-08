@@ -45,21 +45,50 @@ const Register = () => {
             <form onSubmit={handleSubmit} style={formStyle}>
                 <h2>Register</h2>
                 <div>
-                    <label>Name:</label>
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                    <label>Username:</label>
+                    <input type="text" name="username" placeholder="Enter your username" value={formData.username} onChange={handleChange} required />
                 </div>
                 <div>
                     <label>Email:</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                    <input type="email" name="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required />
                 </div>
                 <div>
                     <label>Password:</label>
-                    <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+                    <input type="password" name="password" placeholder="Enter your password" value={formData.password} onChange={handleChange} required />
                 </div>
-                <button type="submit">Register</button>
+                <div>
+            <label>Role:</label>
+            <select name="role" value={formData.role} onChange={handleChange}>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+                <button type="submit" style={buttonStyle}>Register</button>
             </form>
+            )}
         </div>
     );
+};
+const formStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  maxWidth: "400px",
+  margin: "auto",
+};
+
+const containerStyle = {
+  textAlign: "center",
+  marginTop: "20px",
+};
+
+const buttonStyle = {
+  padding: "10px 20px",
+  backgroundColor: "#4CAF50",
+  color: "white",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
 };
 
 export default Register;
