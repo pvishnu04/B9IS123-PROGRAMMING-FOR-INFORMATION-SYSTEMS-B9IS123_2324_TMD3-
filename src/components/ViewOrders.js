@@ -4,14 +4,15 @@ import AdminDashboard from "./AdminDashboard";
 
 const ViewOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState("id");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await axios.get("http://localhost:5000/admin/orders");
-        console.log("Fetched Orders Response:", response.data);
-
         if (response.data && response.data.orders) {
           setOrders(response.data.orders);
         } else {
@@ -27,13 +28,10 @@ const ViewOrders = () => {
 
   const handleUpdateOrder = async (id, status) => {
     try {
-      console.log(`Updating order ${id} to ${status}`);
       const response = await axios.put(
         `http://localhost:5000/admin/orders/${id}`,
         { status }
       );
-      console.log("Response from update:", response.data);
-
       if (response.data.message === 'Order updated successfully') {
         setOrders(
           orders.map((order) =>
@@ -52,12 +50,9 @@ const ViewOrders = () => {
 
   const handleDeleteOrder = async (id) => {
     try {
-      console.log(`Deleting order ${id}`);
-      const response = await axios.delete(`http://localhost:5000/admin/orders/${id}`);
-      console.log("Response from delete:", response.data);
-  
+      const response = await axios.delete(`http://localhost:5000/admin/orders/${id}`);  
       if (response.data.message === 'Order deleted successfully') {
-        setOrders(orders.filter((order) => order.id !== id));  // Remove the order from the state
+        setOrders(orders.filter((order) => order.id !== id));  
         alert("Order deleted successfully");
       } else {
         alert("Failed to delete order");
@@ -67,6 +62,34 @@ const ViewOrders = () => {
       alert("Error deleting order.");
     }
   };
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value.toLowerCase());
+  };
+
+  const handleSortChange = (field) => {
+    const newOrder = sortOrder === "asc" ? "desc" : "asc";
+    setSortField(field);
+    setSortOrder(newOrder);
+
+    const sortedOrders = [...orders].sort((a, b) => {
+      if (field === "id") {
+        return newOrder === "asc" ? a.id - b.id : b.id - a.id;
+      } else {
+        return newOrder === "asc"
+          ? a.status.localeCompare(b.status)
+          : b.status.localeCompare(a.status);
+      }
+    });
+
+    setOrders(sortedOrders);
+  };
+
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.id.toString().includes(searchTerm) ||
+      order.status.toLowerCase().includes(searchTerm)
+  );
+  
   return (
     <div>
       <AdminDashboard />
