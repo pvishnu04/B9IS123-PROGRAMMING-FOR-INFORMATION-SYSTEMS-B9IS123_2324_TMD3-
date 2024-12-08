@@ -1,81 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes,Link, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import Home from './components/Home';
 import Register from './components/Register';
 import Login from './components/Login';
 import ContactUs from './components/ContactUs';
-import MedicineList from './components/MedicineList';
-import StoreList from './components/StoreList';
 import AdminDashboard from './components/AdminDashboard';
-import PharmacistDashboard from './components/PharmacistDashboard';
+import UserDashboard from './components/UserDashboard';
+import ManageMedicines from './components/ManageMedicines';
+import Medicines from './components/Medicines'; 
+import Orders from './components/Order'; 
+import ViewOrders from './components/ViewOrders';
 
 function App() {
-  const [userRole, setUserRole] = useState(null);
-
+  const [setRole] = useState(null);
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
-    setUserRole(storedRole);
-  }, []);
+    const loggedInUser = localStorage.getItem('user'); // Retrieve user details from localStorage
+    if (loggedInUser) {
+      const user = JSON.parse(loggedInUser); // Parse the stored user details
+      setRole(user.role); // Set user role
+      if (user.role === 'user') {
+        navigate('/userdashboard'); // Redirect to user dashboard if user is logged in
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      }
+    }
+  }, [navigate]);
   return (
-    <Router>
-      <DynamicHeader userRole={userRole} />
+      <div className="App">
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/stores" element={<StoreList />} />
-
-          {/* Admin Routes */}
           <Route path="/admin_dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/medicines" element={<MedicineList />} />
-          <Route path="/admin/stores" element={<StoreList />} />
-
-          {/* Pharmacist Routes */}
-          <Route path="/pharmacist_dashboard" element={<PharmacistDashboard />} />
-          {/* User Routes */}
-          <Route path="/user_dashboard" element={<UserDashboard />} />
-          {/* Dashboard Redirect */}
-          <Route path="/dashboard" element={<RenderDashboard userRole={userRole} />} />
+          <Route path="/admin/medicines" element={<ManageMedicines />} />
+          <Route path="/userdashboard" element={<UserDashboard />} />
+          <Route path="/api/medicines" element={<Medicines />} /> 
+          <Route path="/api/orders" element={<Orders />} /> 
+          <Route path="/admin/orders" element={<ViewOrders />} />
         </Routes>
-    </Router>
+    </div>
   );
 }
 
-function DynamicHeader({ userRole }) {
-  const location = useLocation();
-
-  if (location.pathname.startsWith('/admin')) {
-    return (
-      <header>
-        <h1>Welcome to Admin Dashboard</h1>
-        <nav>
-          <Link to="/admin/medicines">Medicines</Link> | 
-        </nav>
-      </header>
-    );
-  } else if (location.pathname.startsWith('/pharmacist')) {
-    return (
-      <header>
-        <h1>Welcome to Pharmacist Dashboard</h1>
-        <nav>
-          <Link to="/pharmacist_dashboard">Dashboard</Link>
-        </nav>
-      </header>
-    );
-  } else if (location.pathname.startsWith('/user')) {
-    return (
-      <header>
-        <h1>Welcome to User Dashboard</h1>
-        <nav>
-          <Link to="/user_dashboard">My Orders</Link> | 
-        </nav>
-      </header>
-    );
-  }
-    function RenderDashboard({ userRole }) {
-  if (userRole === 'admin') return <Navigate to="/admin_dashboard" />;
-  if (userRole === 'pharmacist') return <Navigate to="/pharmacist_dashboard" />;
-  if (userRole === 'user') return <Navigate to="/user_dashboard" />;
-  return <Navigate to="/login" />;
-}
 export default App;
