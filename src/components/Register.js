@@ -1,33 +1,49 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom"; 
+import Home from './Home';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
+        username: "",
+        password: "",
+        email: "",
+        role:"user",
     });
-
+    const [isRegistered, setIsRegistered] = useState(false); 
+    const navigate = useNavigate();
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:3001/api/users', formData);
-            alert('User registered successfully!');
+            const response = await axios.post('http://localhost:5000/register', formData);
             console.log(response.data);
+            alert('Registration successful!');
+            setFormData({ username: "", password: "", email: "", role: "user" }); 
+            setIsRegistered(true);
         } catch (err) {
-            console.error(err);
+            console.error("Error registering user:", error);
             alert('Registration failed. Please try again.');
+            setFormData({ username: "", password: "", email: "", role: "user" });
         }
     };
     return (
-        <div>
-            <h2>Register</h2>
-            <form onSubmit={handleSubmit}>
+        <div style={containerStyle}>
+            <Home />
+          {isRegistered ? (
+            <div>
+              <h2>Registration Successful!</h2>
+              <p>Click below to login:</p>
+              <button onClick={() => navigate("/login")} style={buttonStyle}>
+                Go to Login
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={formStyle}>
+                <h2>Register</h2>
                 <div>
                     <label>Name:</label>
                     <input type="text" name="name" value={formData.name} onChange={handleChange} required />
