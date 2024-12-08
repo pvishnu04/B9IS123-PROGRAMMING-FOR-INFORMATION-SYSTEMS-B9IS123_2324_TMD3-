@@ -124,7 +124,6 @@ def login():
     else:
         return jsonify({"message": "Invalid credentials"}), 401
 
-
 @app.route('/register', methods=['POST'])
 def register():
     try:
@@ -147,7 +146,6 @@ def register():
         """
         cursor.execute(query, (username, password, role, email))
         conn.commit()
-
         cursor.close()
         conn.close()
         return jsonify({"message": "User registered successfully"}), 201
@@ -156,99 +154,41 @@ def register():
         app.logger.error(f"Database error: {e}")
         return jsonify({"error": "Database error, please try again later"}), 500
     except Exception as e:
-
         app.logger.error(f"Unexpected error: {e}")
         app.logger.error(traceback.format_exc())  
         return jsonify({"error": "An unexpected error occurred"}), 500
 
-@app.route('/login', methods=['POST'])
-def login():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+    @app.route('/admin/medicines', methods=['GET'])
+    def get_medicines():
+        medicines = Medicine.query.all()
+        return jsonify(medicines=[medicine.to_dict() for medicine in medicines])
 
-        username = data.get('username')
-        password = data.get('password')
+    @app.route('/api/medicines', methods=['GET'])
+    def get_medicine():
+        medicines = Medicine.query.all()
+        return jsonify(medicines=[medicine.to_dict() for medicine in medicines])
 
-        if not username or not password:
-            return jsonify({"error": "Missing required fields"}), 400
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        query = "SELECT * FROM users WHERE username = %s AND password = %s"
-        cursor.execute(query, (username, password))
-        user = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-        if user:
-            session['username'] = user[1]  # Store username in session
-            session['role'] = user[3]      # Store role in session
-
-            if user[3] == 'admin':
-                return jsonify({"message": "Login successful. Redirecting to Admin Dashboard."}), 200
-            elif user[3] == 'pharmacist':
-                return jsonify({"message": "Login successful. Redirecting to Pharmacist Dashboard."}), 200
-            elif user[3] == 'user':
-                return jsonify({"message": "Login successful. Redirecting to User Dashboard."}), 200
-        else:
-            return jsonify({"error": "Invalid username or password"}), 401
-    except pg8000.DatabaseError as e:
-        app.logger.error(f"Database error: {e}")
-        return jsonify({"error": "Database error, please try again later"}), 500
-    except Exception as e:
-        app.logger.error(f"Unexpected error: {e}")
-        app.logger.error(traceback.format_exc())  # Print full stack trace for debugging
-        return jsonify({"error": "An unexpected error occurred"}), 500
-@app.route('/admin/medicines', methods=['POST'])
-def add_medicine():
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            data = request.get_json()
-            name = data.get('name')
-            description = data.get('description')
-            price = data.get('price')
-            availability = data.get('availability')
-
-            if not name or not price or not availability:
-                return jsonify({"error": "Missing required fields"}), 400
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            query = """
-                INSERT INTO medicines (name, description, price, availability)
-                VALUES (%s, %s, %s, %s)
-            """
-            cursor.execute(query, (name, description, price, availability))
-            conn.commit()
-
-            cursor.close()
-            conn.close()
-            return jsonify({"message": "Medicine added successfully"}), 201
-        except Exception as e:
-            app.logger.error(f"Error adding medicine: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
 @app.route('/admin/medicines', methods=['GET'])
-def view_medicines():
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            query = "SELECT * FROM medicines"
-            cursor.execute(query)
-            medicines = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            return jsonify({"medicines": medicines}), 200
-        except Exception as e:
-            app.logger.error(f"Error viewing medicines: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
+def add_medicine():
+    try:
+        data = request.json
+        # Ensure data is present and valid
+        if not data.get('name') or not data.get('description') or data.get('price') is None or data.get('stock_quantity') is None:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        new_medicine = Medicine(
+            name=data['name'],
+            description=data['description'],
+            price=data['price'],  # Should be a float
+            stock_quantity=data['stock_quantity']  # Should be an integer
+        )
+        db.session.add(new_medicine)
+        db.session.commit()
+        return jsonify({"message": "Medicine added successfully"}), 201
+    except Exception as e:
+        logging.error(f"Error adding medicine: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
     
 @app.route('/admin/medicines/<int:id>', methods=['PUT'])
 def update_medicine(id):
