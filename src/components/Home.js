@@ -8,6 +8,7 @@ const Home = () => {
       <nav>
       <Link to="/register">Register</Link>
       <Link to="/login">Login</Link>
+      <Link to="/api/medicines">Medicines</Link>
       <Link to="/contactUs">Contact Us</Link>
       </nav>
   </div>
