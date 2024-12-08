@@ -106,7 +106,25 @@ class OrderItem(db.Model):
             'price': str(self.price),
             'total_price': str(self.price * self.quantity)
         }
-        
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    # Query the User table
+    user = User.query.filter_by(username=username, password=password).first()
+
+    if user:
+        return jsonify({"message": "Login successful", "role": user.role}), 200
+    else:
+        return jsonify({"message": "Invalid credentials"}), 401
+
+
 @app.route('/register', methods=['POST'])
 def register():
     try:
@@ -134,7 +152,7 @@ def register():
         conn.close()
         return jsonify({"message": "User registered successfully"}), 201
 
-    except pg8000.DatabaseError as e:
+    except psycopg2.DatabaseError as e:
         app.logger.error(f"Database error: {e}")
         return jsonify({"error": "Database error, please try again later"}), 500
     except Exception as e:
@@ -306,53 +324,58 @@ def view_orders():
 
 @app.route('/admin/orders/<int:id>', methods=['PUT'])
 def update_order(id):
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            data = request.get_json()
-            status = data.get('status')
-
-            if not status:
-                return jsonify({"error": "Missing required fields"}), 400
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            query = """
-                UPDATE orders SET status = %s WHERE id = %s
-            """
-            cursor.execute(query, (status, id))
-            conn.commit()
-
-            cursor.close()
-            conn.close()
-
-            return jsonify({"message": "Order updated successfully"}), 200
-        except Exception as e:
-            app.logger.error(f"Error updating order: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
+    try:
+        order = Order.query.get(id)
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+        
+        status = request.json.get('status')
+        if status:
+            order.status = status
+            db.session.commit()
+            return jsonify({'message': 'Order updated successfully'}), 200
+        else:
+            return jsonify({'error': 'No status provided'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Error updating order'}), 500
 
 @app.route('/admin/orders/<int:id>', methods=['DELETE'])
 def delete_order(id):
     if 'username' in session and session['role'] == 'admin':
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
+        order = Order.query.get(id)
+        if not order:
+            return jsonify({"message": "Order not found"}), 404
 
-            query = "DELETE FROM orders WHERE id = %s"
-            cursor.execute(query, (id,))
-            conn.commit()
+        db.session.delete(order)
+        db.session.commit()
+        return jsonify({"message": "Order deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Error deleting order: {str(e)}"}), 500
 
-            cursor.close()
-            conn.close()
+@app.route('/api/orders', methods=['POST'])
+def place_order():
+    data = request.get_json()
+    selected_medicines = data.get('selected_medicines', [])
+    total_amount = 0
 
-            return jsonify({"message": "Order deleted successfully"}), 200
-        except Exception as e:
-            app.logger.error(f"Error deleting order: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
+    for item in selected_medicines:
+        medicine_id = item['medicine_id']
+        quantity = int(item['quantity'])  # Ensure quantity is an integer
+
+        # Fetch medicine details from the database
+        medicine = Medicine.query.get(medicine_id)
+        if medicine:
+            # Convert price to float and calculate total
+            total_amount += float(medicine.price) * quantity
+
+    # Handle the order creation logic (save to database, etc.)
+    order = Order(total_amount=total_amount)
+    db.session.add(order)
+    db.session.commit()
+
+    return jsonify({'message': 'Order placed successfully', 'total_amount': total_amount}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
