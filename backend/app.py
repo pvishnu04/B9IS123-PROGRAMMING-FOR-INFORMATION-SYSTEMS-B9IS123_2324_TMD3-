@@ -252,75 +252,45 @@ def view_medicines():
     
 @app.route('/admin/medicines/<int:id>', methods=['PUT'])
 def update_medicine(id):
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            data = request.get_json()
-            name = data.get('name')
-            description = data.get('description')
-            price = data.get('price')
-            availability = data.get('availability')
+    data = request.json
+    medicine = Medicine.query.get_or_404(id)
+    medicine.name = data['name']
+    medicine.description = data['description']
+    medicine.price = data['price']
+    medicine.stock_quantity = data['stock_quantity']
+    db.session.commit()
+    return jsonify(message="Medicine updated successfully")
 
-            if not name or not price or not availability:
-                return jsonify({"error": "Missing required fields"}), 400
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-             query = """
-                UPDATE medicines SET name = %s, description = %s, price = %s, availability = %s
-                WHERE id = %s
-            """
-            cursor.execute(query, (name, description, price, availability, id))
-            conn.commit()
-
-            cursor.close()
-            conn.close()
-
-            return jsonify({"message": "Medicine updated successfully"}), 200
-        except Exception as e:
-            app.logger.error(f"Error updating medicine: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
-    
 @app.route('/admin/medicines/<int:id>', methods=['DELETE'])
 def delete_medicine(id):
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            query = "DELETE FROM medicines WHERE id = %s"
-            cursor.execute(query, (id,))
-            conn.commit()
-            cursor.close()
-            conn.close()
+    medicine = Medicine.query.get_or_404(id)
+    db.session.delete(medicine)
+    db.session.commit()
+    return jsonify(message="Medicine deleted successfully")
 
-            return jsonify({"message": "Medicine deleted successfully"}), 200
-        except Exception as e:
-            app.logger.error(f"Error deleting medicine: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
+@login_required
+@app.route('/check-session', methods=['GET'])
+def check_session():
+    if current_user.is_authenticated and current_user.role == 'admin':
+        return jsonify({"message": "Session active"}), 200
     return jsonify({"error": "Access denied"}), 403
 
 @app.route('/admin/orders', methods=['GET'])
-def view_orders():
-    if 'username' in session and session['role'] == 'admin':
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            query = "SELECT * FROM orders"
-            cursor.execute(query)
-            orders = cursor.fetchall()
-
-            cursor.close()
-            conn.close()
-
-            return jsonify({"orders": orders}), 200
-        except Exception as e:
-            app.logger.error(f"Error viewing orders: {e}")
-            app.logger.error(traceback.format_exc())
-            return jsonify({"error": "An unexpected error occurred"}), 500
-    return jsonify({"error": "Access denied"}), 403
+def get_orders():
+    try:
+        orders = Order.query.all()
+        print(f"Fetched Orders: {orders}")  # Log the fetched orders
+        orders_list = [{
+            'id': order.id,
+            'user_id': order.user_id,
+            'total_amount': str(order.total_amount),
+            'status': order.status,
+            'created_at': order.created_at.isoformat()
+        } for order in orders]
+        return jsonify({'orders': orders_list}), 200
+    except Exception as e:
+        print(f"Error fetching orders: {e}")
+        return jsonify({'error': 'Error fetching orders'}), 500
 
 @app.route('/admin/orders/<int:id>', methods=['PUT'])
 def update_order(id):
@@ -363,19 +333,26 @@ def place_order():
     for item in selected_medicines:
         medicine_id = item['medicine_id']
         quantity = int(item['quantity'])  # Ensure quantity is an integer
-
-        # Fetch medicine details from the database
         medicine = Medicine.query.get(medicine_id)
         if medicine:
             # Convert price to float and calculate total
             total_amount += float(medicine.price) * quantity
 
-    # Handle the order creation logic (save to database, etc.)
     order = Order(total_amount=total_amount)
     db.session.add(order)
     db.session.commit()
 
     return jsonify({'message': 'Order placed successfully', 'total_amount': total_amount}), 201
+
+@app.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully"}), 200
+
+@app.route('/')
+def home():
+    return jsonify({"message": "Welcome to the pharmacy app"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
